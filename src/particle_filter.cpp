@@ -46,6 +46,10 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 void ParticleFilter::prediction(double delta_t, double std_pos[], double velocity, double yaw_rate) {
 
 	std:default_random_engine gen;
+	
+	normal_distribution<double> N_x(0,std_pos[0]);
+	normal_distribution<double> N_y(0,std_pos[1]);
+	normal_distribution<double> N_theta(0,std_pos[2]);
 
 	for (int i=0; i<num_particles;i++) {
 		
@@ -53,7 +57,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 		double new_y;
 		double new_theta;
 		
-		if (yaw_rate==0) {
+		if (fabs(yaw_rate)<0.001) {
 			new_x=particles[i].x+delta_t*velocity*cos(particles[i].theta);
 			new_y=particles[i].y+delta_t*velocity*sin(particles[i].theta);
 			new_theta=particles[i].theta;
@@ -64,15 +68,11 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 			new_theta=particles[i].theta+delta_t*yaw_rate;			
 		}
 
-		normal_distribution<double> N_x(new_x,std_pos[0]);
-		normal_distribution<double> N_y(new_y,std_pos[1]);
-		normal_distribution<double> N_theta(new_theta,std_pos[2]);
-	
-		particles[i].x=N_x(gen);
-		particles[i].y=N_y(gen);
-		particles[i].theta=N_theta(gen);
+		// Add some random noise
 		
-		//cout<< "Particle id: "<<particles[i].id<<" Prediction particle x: " << particles[i].x << " Prediction particle y: " << particles[i].y << " Prediction particle theta: "<<particles[i].theta<<endl;
+		particles[i].x=new_x+N_x(gen);
+		particles[i].y=new_y+N_y(gen);
+		particles[i].theta=new_theta+N_theta(gen);		
 	}
 }
 
@@ -87,14 +87,8 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
 		const std::vector<LandmarkObs> &observations, const Map &map_landmarks) {
 
-	//vector<int>associations;
-	//vector<double>sense_x;
-	//vector<double>sense_y;
-	//vector<LandmarkObs> trans_observations;
-	//LandmarkObs trans_obs;
-	
 	LandmarkObs obs;
-		
+	double norm=1/(2*M_PI*std_landmark[0]*std_landmark[1]);		
 	weights.clear(); // clear the old weights vector
 				
 	for (int p=0; p<num_particles;p++) { // for each particle
@@ -109,12 +103,12 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 			
 			double x_obs=cos(particles[p].theta)*obs.x-sin(particles[p].theta)*obs.y+particles[p].x;
 			double y_obs=cos(particles[p].theta)*obs.y+sin(particles[p].theta)*obs.x+particles[p].y;				
-			//trans_observations.push_back(trans_obs); // all transformed observations in list				
 			
 			//STEP2: Associate observation to closest landmark via euclidean distance				
 			
 			LandmarkObs nearest_landmark;
 			double min_dist=sensor_range;
+			bool no_landmark=true;
 			
 			for (int l=0; l<map_landmarks.landmark_list.size();l++) { // calculate rho from various landmarks
 				
@@ -130,20 +124,25 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 					nearest_landmark.id=map_landmarks.landmark_list[l].id_i;
 					nearest_landmark.x=x_l_map;
 					nearest_landmark.y=y_l_map;	
-					min_dist=rho;							
+					min_dist=rho;	
+					no_landmark=false; // found at least one landmark within sensor range
 				}				
-			}		
-			// STEP3: Update Weight
+			}
 			
-			double norm=1/(2*M_PI*std_landmark[0]*std_landmark[1]);
+			// STEP3: Update Weight 
 			
-			double x_x_mu2=pow((x_obs-nearest_landmark.x),2);
-			double y_y_mu2=pow((y_obs-nearest_landmark.y),2);
-			double exp_term=(x_x_mu2/(2*std_landmark[0]*std_landmark[0])+y_y_mu2/(2*std_landmark[1]*std_landmark[1]));
-			
-			weight_upd= weight_upd*norm*exp(-exp_term);
-		}
-		
+			if(no_landmark==false) { // ensure there is at least one landmark within sensor range
+				
+				double x_x_mu2=pow((x_obs-nearest_landmark.x),2);
+				double y_y_mu2=pow((y_obs-nearest_landmark.y),2);
+				double exp_term=(x_x_mu2/(2*std_landmark[0]*std_landmark[0])+y_y_mu2/(2*std_landmark[1]*std_landmark[1]));
+				
+				weight_upd= weight_upd*norm*exp(-exp_term); //norm is calculated before the loop
+			}
+			else {
+				weight_upd=0;			
+			}
+		}		
 		particles[p].weight=weight_upd;
 		weights.push_back(weight_upd);
 	}
