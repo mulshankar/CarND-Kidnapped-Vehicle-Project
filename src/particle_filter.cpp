@@ -25,9 +25,9 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	
 	std:default_random_engine gen;
 	
-	std:normal_distribution<double> N_x(x,std[0]);
-	std:normal_distribution<double> N_y(y,std[1]);
-	std:normal_distribution<double> N_theta(theta,std[2]);
+	normal_distribution<double> N_x(x,std[0]);
+	normal_distribution<double> N_y(y,std[1]);
+	normal_distribution<double> N_theta(theta,std[2]);
 	
 	for (int i=0; i<num_particles;i++) {	
 		Particle particle;
@@ -116,10 +116,10 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 			LandmarkObs nearest_landmark;
 			double min_dist=sensor_range;
 			
-			for (int l=0; l<map_landmarks.map.landmark_list.size();l++) { // calculate rho from various landmarks
+			for (int l=0; l<map_landmarks.landmark_list.size();l++) { // calculate rho from various landmarks
 				
-				double x_l_map=map_landmarks.map.landmark_list[l].x_f;
-				double y_l_map=map_landmarks.map.landmark_list[l].y_f;
+				double x_l_map=map_landmarks.landmark_list[l].x_f;
+				double y_l_map=map_landmarks.landmark_list[l].y_f;
 				
 				double x2_x1=(x_l_map-x_obs); // Calculate Euclidean distance, rho
 				double y2_y1=(y_l_map-y_obs);
@@ -127,7 +127,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 				
 				if (rho<min_dist) { // if rho is above sensor range, ignore and find the nearest landmark
 				
-					nearest_landmark.id=map_landmarks.map.landmark_list[l].id;
+					nearest_landmark.id=map_landmarks.landmark_list[l].id;
 					nearest_landmark.x=x_l_map;
 					nearest_landmark.y=y_l_map;	
 					min_dist=rho;							
@@ -135,7 +135,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 			}		
 			// STEP3: Update Weight
 			
-			double norm=1/(2*PI*std_landmark[0]*std_landmark[1]);
+			double norm=1/(2*M_PI*std_landmark[0]*std_landmark[1]);
 			
 			double x_x_mu2=pow((x_obs-nearest_landmark.x),2);
 			double y_y_mu2=pow((y_obs-nearest_landmark.y),2);
