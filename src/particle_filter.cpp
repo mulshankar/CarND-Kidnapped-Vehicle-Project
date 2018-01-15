@@ -127,7 +127,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 				
 				if (rho<min_dist) { // if rho is above sensor range, ignore and find the nearest landmark
 				
-					nearest_landmark.id=map_landmarks.landmark_list[l].id;
+					nearest_landmark.id=map_landmarks.landmark_list[l].id_i;
 					nearest_landmark.x=x_l_map;
 					nearest_landmark.y=y_l_map;	
 					min_dist=rho;							
@@ -144,7 +144,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 			weight_upd= weight_upd*norm*exp(-exp_term);
 		}
 		
-		particle[p].weight=weight_upd;
+		particles[p].weight=weight_upd;
 		weights.push_back(weight_upd);
 	}
 }
