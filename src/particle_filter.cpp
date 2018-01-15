@@ -21,7 +21,7 @@ using namespace std;
 
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	
-	num_particles=1;
+	num_particles=100;
 	
 	std:default_random_engine gen;
 	
