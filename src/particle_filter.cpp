@@ -21,7 +21,7 @@ using namespace std;
 
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	
-	num_particles=100;
+	num_particles=20;
 	
 	std:default_random_engine gen;
 	
@@ -72,7 +72,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 		particles[i].y=N_y(gen);
 		particles[i].theta=N_theta(gen);
 		
-		cout<< "Particle id: "<<particles[i].id<<" Prediction particle x: " << particles[i].x << " Prediction particle y: " << particles[i].y << " Prediction particle theta: "<<particles[i].theta<<endl;
+		//cout<< "Particle id: "<<particles[i].id<<" Prediction particle x: " << particles[i].x << " Prediction particle y: " << particles[i].y << " Prediction particle theta: "<<particles[i].theta<<endl;
 	}
 }
 
